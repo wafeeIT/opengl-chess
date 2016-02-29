@@ -8,8 +8,14 @@ float OrthoHeight;
 float OrthoWidth;
 float WindowHeight;
 float WindowWidth;
-
 float BlockDistance;
+
+float MoveBeginX;
+float MoveBeginY;
+
+int ChosenPiece;
+int ChosenColor;
+
 
 #define PawnIndex   8
 #define PieceType   8
@@ -228,34 +234,109 @@ void MyReshape(int Width, int Height)
 void WindowInitializations()
 {
     glClearColor(0,0,0,1);
-    glutFullScreen();
+    //glutFullScreen();
 }
 
+void FindPiece(int X, int Y)
+{
+    int Count;
+    int TempColor;
+
+    for(TempColor = 0; TempColor < 2; TempColor++)
+        for(Count = 0; Count < 8; Count++)
+            if(Piece.Pawns[Count][XCoordinate][TempColor] == X && Piece.Pawns[Count][YCoordinate][TempColor] == Y)
+            {
+                ChosenPiece = Count;
+                ChosenColor = TempColor;
+                return;
+            }
+
+    for(TempColor = 0; TempColor < 2; TempColor++)
+        for(Count = 0; Count < 8; Count++)
+            if(Piece.OtherPieces[Count][XCoordinate][TempColor] == X && Piece.OtherPieces[Count][YCoordinate][TempColor] == Y)
+            {
+                ChosenPiece = Count + 8;
+                ChosenColor = TempColor;
+                return;
+            }
+
+    ChosenPiece = -1;
+    ChosenColor = -1;
+}
+
+int MoveValid()
+{
+    return 1;
+}
+
+void MovePiece(float DestinationX, float DestinationY)
+{
+
+    if(ChosenPiece == -1 && ChosenColor == -1)
+        return;
+
+    if(MoveValid() == 0)
+        return;
+
+    if(ChosenPiece < 8)
+    {
+        Piece.Pawns[ChosenPiece][XCoordinate][ChosenColor] = DestinationX;
+        Piece.Pawns[ChosenPiece][YCoordinate][ChosenColor] = DestinationY;
+    }
+
+    else
+    {
+        Piece.OtherPieces[ChosenPiece - 8][XCoordinate][ChosenColor] = DestinationX;
+        Piece.OtherPieces[ChosenPiece - 8][YCoordinate][ChosenColor] = DestinationY;
+    }
+
+    glutPostRedisplay();
+}
 
 void MyMouse(int Button, int State, int X, int Y)
 {
     if(Button == GLUT_LEFT && State == GLUT_DOWN)
     {
-        cout<<"Ortho : "<<OrthoWidth<<" "<<OrthoHeight<<endl;
-        cout<<"Screen : "<<WindowWidth<<" "<<WindowHeight<<endl;
-        cout<<X<<" "<<Y<<endl;
+        MoveBeginX = ( -500 * (double)WindowWidth / WindowHeight + 1000 * (double)X / WindowHeight );
+        if (MoveBeginX < 0) MoveBeginX = (int)((MoveBeginX - 100) / 100) * 100;
+        else MoveBeginX = (int)(MoveBeginX / 100) * 100;
+
+        MoveBeginY = 500 - (1000 * Y / (double)WindowHeight);
+        if (MoveBeginY < 0) MoveBeginY = (int)((MoveBeginY - 100) / 100) * 100;
+        else MoveBeginY = (int)(MoveBeginY / 100) * 100;
+    }
+
+    if(Button == GLUT_LEFT && State == GLUT_UP)
+    {
+        cout<<MoveBeginX<<" "<<MoveBeginY<<" "<<X<<" "<<Y<<endl;
+
+        float DestinationX = ( -500 * (double)WindowWidth / WindowHeight + 1000 * (double)X / WindowHeight );
+        if (DestinationX < 0) DestinationX = (int)((DestinationX - 100) / 100) * 100;
+        else DestinationX = (int)(DestinationX / 100) * 100;
+
+        float DestinationY = 500 - (1000 * Y / (double)WindowHeight);
+        if (DestinationY < 0) DestinationY = (int)((DestinationY - 100) / 100) * 100;
+        else DestinationY = (int)(DestinationY / 100) * 100;
+
+        FindPiece(MoveBeginX, MoveBeginY);
+        MovePiece(DestinationX, DestinationY);
     }
 }
 
 int main(int argc, char** argv)
 {
-	glutInit(&argc,argv);
+    glutInit(&argc,argv);
 
-	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-	glutInitWindowSize(500,500);
-	glutInitWindowPosition(0,0);
-	glutCreateWindow("Chess v1.0");
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    glutInitWindowSize(500,500);
+    glutInitWindowPosition(0,0);
+    glutCreateWindow("Chess v1.0");
 
     WindowInitializations();
 
-	glutDisplayFunc(MyDisplay);
+    glutDisplayFunc(MyDisplay);
     glutReshapeFunc(MyReshape);
     glutMouseFunc(MyMouse);
-	glutMainLoop();
+    glutMainLoop();
     return 0;
 }
