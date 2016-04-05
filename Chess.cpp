@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <unistd.h>
 #include <GLUT/glut.h>
 
 /* Change to <GL/glut.h> on Linux systems */
